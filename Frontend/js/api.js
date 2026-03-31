@@ -1,33 +1,75 @@
-// frontend/js/api.js
-const API_BASE = 'http://localhost:3000/api';
 
-async function request(method, path, body = null) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${API_BASE}${path}`, opts);
-  const data = await res.json();
-  if (!res.ok) {
-    const msg = data.errors ? data.errors.map(e => e.msg).join(', ') : data.message || 'Request failed';
-    throw new Error(msg);
-  }
-  return data;
-}
+// =====================================================
+// MediSafe API Configuration
+// =====================================================
+// 🔧 IMPORTANT: After deploying backend to Railway,
+//    replace the URL below with your Railway app URL.
+//    Example: https://medisafe-backend-production.up.railway.app
+// =====================================================
 
-const MedicineAPI = {
-  getAll(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    return request('GET', `/medicines${qs ? '?' + qs : ''}`);
-  },
-  getOne(id)       { return request('GET',    `/medicines/${id}`); },
-  getStats()       { return request('GET',    `/medicines/stats`); },
-  getAlerts(days)  { return request('GET',    `/medicines/alerts?days=${days||30}`); },
-  create(data)     { return request('POST',   `/medicines`, data); },
-  update(id, data) { return request('PUT',    `/medicines/${id}`, data); },
-  delete(id)       { return request('DELETE', `/medicines/${id}`); },
-  health()         { return request('GET',    `/health`); },
+const BASE_URL = "https://YOUR-RAILWAY-APP-URL.up.railway.app";
+
+// ---- DO NOT EDIT BELOW THIS LINE ----
+
+const API = {
+  health: () => `${BASE_URL}/api/health`,
+  medicines: () => `${BASE_URL}/api/medicines`,
+  medicineById: (id) => `${BASE_URL}/api/medicines/${id}`,
+  stats: () => `${BASE_URL}/api/medicines/stats`,
+  alerts: () => `${BASE_URL}/api/medicines/alerts`,
 };
 
-async function checkConnection() {
-  try { await MedicineAPI.health(); return true; }
-  catch { return false; }
+// Generic fetch helper
+async function apiFetch(url, options = {}) {
+  const defaultOptions = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(url, { ...defaultOptions, ...options });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+}
+
+// ---- API functions ----
+
+async function getAllMedicines(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const url = query ? `${API.medicines()}?${query}` : API.medicines();
+  return apiFetch(url);
+}
+
+async function getMedicineById(id) {
+  return apiFetch(API.medicineById(id));
+}
+
+async function createMedicine(data) {
+  return apiFetch(API.medicines(), {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+async function updateMedicine(id, data) {
+  return apiFetch(API.medicineById(id), {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+async function deleteMedicine(id) {
+  return apiFetch(API.medicineById(id), {
+    method: "DELETE",
+  });
+}
+
+async function getStats() {
+  return apiFetch(API.stats());
+}
+
+async function getAlerts() {
+  return apiFetch(API.alerts());
 }
