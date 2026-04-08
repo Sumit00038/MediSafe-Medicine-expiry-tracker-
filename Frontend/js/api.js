@@ -7,8 +7,7 @@
 //    Example: https://medisafe-backend-production.up.railway.app
 // =====================================================
 
-const BASE_URL = "https://YOUR-RAILWAY-APP-URL.up.railway.app";
-
+const BASE_URL = 'https://YOUR-BACKEND-NAME.onrender.com';
 // ---- DO NOT EDIT BELOW THIS LINE ----
 
 const API = {
